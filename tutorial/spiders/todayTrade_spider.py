@@ -7,15 +7,15 @@ from twisted.internet.error import TimeoutError, TCPTimedOutError
 
 
 class QuotesSpider(scrapy.Spider):
-    name = "quotes"
+    name = "todaytrade"
     start_urls = [
         'http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p2'
     ]
 
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=32781))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='today', durable=True)
+        self.channel.queue_declare(queue='todaytrade', durable=True)
 
     def parse(self, response):
         jsonresponse = json.loads(response.body_as_unicode())
@@ -36,6 +36,9 @@ class QuotesSpider(scrapy.Spider):
         #category = productContent.xpath('.//div/span/text()')[1].extract()
         pri = productContent.css('.yp-detail::text')
         contactContent = response.css('div.yp-content .col-xs-6')[1]
+        publishedDate = response.css('.yp-toolbar__item::text').extract_first()[5:]
+        viewCount = response.css('.yp-toolbar__item::text')[1].extract()[4:-1]
+        suburb = response.css('.breadcrumb li')[2].css('::text').extract_first()
         #chat = contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first()
         #email = contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first()
         #if contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/@src').extract_first() is not None:
@@ -44,15 +47,26 @@ class QuotesSpider(scrapy.Spider):
             'title': response.css('div.yp-content h1::text').extract_first(),
             'price': response.meta['jiage'],
             'mobile': response.meta['mobile'],
+            'telephone': response.meta['telephone'],
             'contact': response.meta['contact'],
             'uid': response.meta['uid'],
             'pageUrl': response.url,
             'pageId': response.meta['_id'],
             'changed': response.meta['changed'],
+            'photos': response.meta['photo'],
             'buyOrSell': response.meta['buysells'],
+            'buyOrSell': response.meta['buysell'],
+            'category': response.meta['category'],
+            'delivery': response.meta['delivery'],
             'deliverys': response.meta['deliverys'],
-            'pubTime': response.meta['pub_time'],
+            'publishedTime': response.meta['pub_time'],
+            'publishedDate': publishedDate,
+            'status': response.meta['status'],
+            'commNums': response.meta['comm_nums'],
             'coverImage': response.meta['cover'],
+            'pageViewCount': viewCount,
+            'suburb': suburb,
+            'suburbCode' : response.meta['global_placa'],
             'categoryText': productContent.xpath('.//div/span/text()')[1].extract(),
             'description': response.css('div.yp-descriprion::text').extract_first(),
             'emailUrl': contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first(),
@@ -60,8 +74,8 @@ class QuotesSpider(scrapy.Spider):
         }
 
         jsonBody = json.dumps(body,ensure_ascii=False).encode('utf8')
-        self.channel.basic_publish(exchange='', routing_key='today', body=jsonBody, properties=pika.BasicProperties(
-                         delivery_mode = 2, # make message persistent
+        self.channel.basic_publish(exchange='', routing_key='todaytrade', body=jsonBody, properties=pika.BasicProperties(
+                         delivery_mode=2
                       ))
         yield body
 
