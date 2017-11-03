@@ -71,6 +71,7 @@ target/
 
 # PyCharm
 .idea/
+output/
 
 # Jupyter Notebook
 .ipynb_checkpoints
