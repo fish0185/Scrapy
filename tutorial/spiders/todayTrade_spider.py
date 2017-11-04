@@ -33,15 +33,10 @@ class QuotesSpider(scrapy.Spider):
 
     def parseDetailPage(self, response):
         productContent = response.css('div.yp-content .col-xs-6')[0]
-        #category = productContent.xpath('.//div/span/text()')[1].extract()
-        pri = productContent.css('.yp-detail::text')
         contactContent = response.css('div.yp-content .col-xs-6')[1]
         publishedDate = response.css('.yp-toolbar__item::text').extract_first()[5:]
         viewCount = response.css('.yp-toolbar__item::text')[1].extract()[4:-1]
         suburb = response.css('.breadcrumb li')[2].css('::text').extract_first()
-        #chat = contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first()
-        #email = contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first()
-        #if contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/@src').extract_first() is not None:
 
         body = {
             'title': response.css('div.yp-content h1::text').extract_first(),
@@ -66,7 +61,7 @@ class QuotesSpider(scrapy.Spider):
             'coverImage': response.meta['cover'],
             'pageViewCount': viewCount,
             'suburb': suburb,
-            'suburbCode' : response.meta['global_placa'],
+            'suburbCode': response.meta['global_placa'],
             'categoryText': productContent.xpath('.//div/span/text()')[1].extract(),
             'description': response.css('div.yp-descriprion::text').extract_first(),
             'emailUrl': contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first(),
