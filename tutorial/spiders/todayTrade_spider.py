@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 
 class QuotesSpider(scrapy.Spider):
     name = "todaytrade"
+    queueName = "today_market"
+    messageType = "urn:message:Consumer.App.TodayMarket.Model:MarketPost"
     start_urls = [
         'http://www.sydneytoday.com/flea_market'
     ]
@@ -15,7 +17,7 @@ class QuotesSpider(scrapy.Spider):
     def __init__(self):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='todaytradeproduct', durable=True)
+        self.channel.queue_declare(queue=self.queueName, durable=True)
 
     def parse(self, response):
         self.logger.info('Parse Pagination ====================> %s', 1)
@@ -27,7 +29,7 @@ class QuotesSpider(scrapy.Spider):
             yield response.follow(url, callback=self.parseFullDetailPage, errback=self.errback_httpbin)
 
         #start parse pagination result
-        yield response.follow('http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p2', callback=self.parseJson, errback=self.errback_httpbin)
+        #yield response.follow('http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p2', callback=self.parseJson, errback=self.errback_httpbin)
 
 
     def parseJson(self, response):
@@ -99,8 +101,13 @@ class QuotesSpider(scrapy.Spider):
             'fromAus': postFromAus
         }
 
-        jsonBody = json.dumps(body,ensure_ascii=False).encode('utf8')
-        self.channel.basic_publish(exchange='', routing_key='todaytradeproduct', body=jsonBody, properties=pika.BasicProperties(
+        masstransitMsg = {
+            "messageType": [self.messageType],
+            "message": body
+        }
+
+        jsonBody = json.dumps(masstransitMsg, ensure_ascii=False).encode('utf8')
+        self.channel.basic_publish(exchange='', routing_key=self.queueName, body=jsonBody, properties=pika.BasicProperties(
                          delivery_mode=2
                       ))
         yield body
@@ -116,6 +123,7 @@ class QuotesSpider(scrapy.Spider):
         postFromAus = len(response.css('.alert.alert-warning')) == 0
         htmlDesc = response.css('div.yp-descriprion').extract_first(default='')
         soup = BeautifulSoup(htmlDesc)
+        phothos = response.css('.yp-gallery img').xpath('@src').extract()
 
         body = {
             'source': 1,
@@ -128,7 +136,7 @@ class QuotesSpider(scrapy.Spider):
             'pageUrl': response.url,
             'pageId': response.meta['_id'],
             'changed': response.meta['changed'],
-            'photos': response.meta['photo'],
+            'photos': phothos,
             'buyOrSell': response.meta['buysells'],
             'buyOrSellType': response.meta['buysell'],
             'category': response.meta['category'],
@@ -138,7 +146,7 @@ class QuotesSpider(scrapy.Spider):
             'publishedDate': publishedDate,
             'status': response.meta['status'],
             'commNums': response.meta['comm_nums'],
-            'coverImage': response.meta['cover'],
+            'coverImage': (phothos[:1] or [None])[0],
             'pageViewCount': viewCount,
             'suburb': suburb,
             'suburbCode': response.meta['global_placa'],
@@ -151,8 +159,13 @@ class QuotesSpider(scrapy.Spider):
             'fromAus': postFromAus
         }
 
-        jsonBody = json.dumps(body,ensure_ascii=False).encode('utf8')
-        self.channel.basic_publish(exchange='', routing_key='todaytradeproduct', body=jsonBody, properties=pika.BasicProperties(
+        masstransitMsg = {
+            "messageType": [self.messageType],
+            "message": body
+        }
+
+        jsonBody = json.dumps(masstransitMsg, ensure_ascii=False).encode('utf8')
+        self.channel.basic_publish(exchange='', routing_key=self.queueName, body=jsonBody, properties=pika.BasicProperties(
                          delivery_mode=2
                       ))
         yield body
