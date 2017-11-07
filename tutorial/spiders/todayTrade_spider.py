@@ -29,7 +29,7 @@ class QuotesSpider(scrapy.Spider):
             yield response.follow(url, callback=self.parseFullDetailPage, errback=self.errback_httpbin)
 
         #start parse pagination result
-        #yield response.follow('http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p2', callback=self.parseJson, errback=self.errback_httpbin)
+        yield response.follow('http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p2', callback=self.parseJson, errback=self.errback_httpbin)
 
 
     def parseJson(self, response):
@@ -44,7 +44,7 @@ class QuotesSpider(scrapy.Spider):
                 yield response.follow(detailPageUrl, callback=self.parseDetailPage, meta=row, errback=self.errback_httpbin)
 
             pageCount = currentPagination + 1
-            #if pageCount < 10:
+            #if pageCount < 8:
             nextPageUrl = 'http://www.sydneytoday.com/flea_market-cg0-dl0-bs0-p' + str(pageCount)
             yield response.follow(nextPageUrl, callback=self.parseJson)
 
@@ -73,17 +73,17 @@ class QuotesSpider(scrapy.Spider):
             'price': price,
             'mobile': None,
             'telephone': cellPhoneUrl,
-            'contact': contact,
+            'contactName': contact,
             'uid': None,
             'pageUrl': response.url,
             'pageId': response.url[39:],
             'changed': None,
             'photos': phothos,
             'buyOrSell': buyOrSell,
-            'buyOrSellType': None,
+            'buyOrSellCode': None,
             'category': None,
-            'delivery': None,
-            'deliverys': deliverys,
+            'deliveryCode': None,
+            'delivery': deliverys,
             'publishedTime': None, #发布到用户看到的时间
             'publishedDate': publishedDate,
             'status': None,
@@ -95,9 +95,9 @@ class QuotesSpider(scrapy.Spider):
             'categoryText': productContent.xpath('.//div/span/text()')[1].extract(),
             'description': soup.get_text().strip(),
             'emailUrl': contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first(),
-            'mobileUlr': mobileUrl,
-            'qq': qq,
-            'wechat': contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first(),
+            'mobileUrl': mobileUrl,
+            'QQ': qq,
+            'weChat': contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first(),
             'fromAus': postFromAus
         }
 
@@ -131,17 +131,17 @@ class QuotesSpider(scrapy.Spider):
             'price': response.meta['jiage'],
             'mobile': response.meta['mobile'],
             'telephone': response.meta['telephone'],
-            'contact': response.meta['contact'],
+            'contactName': response.meta['contact'],
             'uid': response.meta['uid'],
             'pageUrl': response.url,
             'pageId': response.meta['_id'],
             'changed': response.meta['changed'],
             'photos': phothos,
             'buyOrSell': response.meta['buysells'],
-            'buyOrSellType': response.meta['buysell'],
-            'category': response.meta['category'],
-            'delivery': response.meta['delivery'],
-            'deliverys': response.meta['deliverys'],
+            'buyOrSellCode': response.meta['buysell'],
+            'categoryCode': response.meta['category'],
+            'deliveryCode': response.meta['delivery'],
+            'delivery': response.meta['deliverys'],
             'publishedTime': response.meta['pub_time'],
             'publishedDate': publishedDate,
             'status': response.meta['status'],
@@ -150,12 +150,12 @@ class QuotesSpider(scrapy.Spider):
             'pageViewCount': viewCount,
             'suburb': suburb,
             'suburbCode': response.meta['global_placa'],
-            'categoryText': productContent.xpath('.//div/span/text()')[1].extract(),
+            'category': productContent.xpath('.//div/span/text()')[1].extract(),
             'description': soup.get_text().strip(),
             'emailUrl': contactContent.xpath('.//img[contains(@src, "yp-contact-email.png")]/following-sibling::img[1]/@src').extract_first(),
-            'mobileUlr': mobileUrl,
-            'qq': qq,
-            'wechat': contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first(),
+            'mobileUrl': mobileUrl,
+            'QQ': qq,
+            'weChat': contactContent.xpath('.//img[contains(@src, "yp-contact-wechat.png")]/../text()').extract_first(),
             'fromAus': postFromAus
         }
 
