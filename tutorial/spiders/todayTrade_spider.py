@@ -110,6 +110,7 @@ class QuotesSpider(scrapy.Spider):
         self.channel.basic_publish(exchange='', routing_key=self.queueName, body=jsonBody, properties=pika.BasicProperties(
                          delivery_mode=2
                       ))
+        body["image_urls"] = phothos
         yield body
 
     def parseDetailPage(self, response):
@@ -168,6 +169,7 @@ class QuotesSpider(scrapy.Spider):
         self.channel.basic_publish(exchange='', routing_key=self.queueName, body=jsonBody, properties=pika.BasicProperties(
                          delivery_mode=2
                       ))
+        body["image_urls"] = phothos
         yield body
 
     def errback_httpbin(self, failure):

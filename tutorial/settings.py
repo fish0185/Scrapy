@@ -68,6 +68,9 @@ CONCURRENT_REQUESTS_PER_IP = 16
 #    'tutorial.pipelines.TutorialPipeline': 300,
 #}
 
+ITEM_PIPELINES = {'scrapy.pipelines.images.ImagesPipeline': 1}
+IMAGES_STORE = 'D:\Code\images'
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
